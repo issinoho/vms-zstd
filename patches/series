@@ -2,3 +2,4 @@
 0001-headers-names-vms.patch
 0002-exit-vms-exit.patch
 0003-fileio-text-records-vms.patch
+0004-cpu-no-inline-asm-vms.patch

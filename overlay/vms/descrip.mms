@@ -27,13 +27,14 @@ INST = [.INSTALL_$(ARCH)
 ! sources include "../lib/zstd.h" and the like, which VSI C finds only
 ! relative to such a directory.
 !   ZSTD_DISABLE_ASM      no x86-64 assembler (huf_decompress_amd64.S)
+!   DYNAMIC_BMI2=0        no run-time BMI2 code paths (patch 0004: no cpuid)
 !   ZSTD_LEGACY_SUPPORT=5 decode the v0.5-v0.7 formats too (the default)
 !   XXH_NAMESPACE=ZSTD_   as lib/libzstd.mk builds it
 ! No ZSTD_MULTITHREAD: single-threaded, like the family's other ports.
 CC = CC
 CC_QUAL = /NAMES=(AS_IS,SHORTENED)/FLOAT=IEEE_FLOAT/IEEE_MODE=DENORM_RESULTS-
 	/PREFIX_LIBRARY_ENTRIES=ALL_ENTRIES/WARNINGS=(ERRORS=IMPLICITFUNC)/MAIN=POSIX_EXIT/NOLIST
-ZSTD_DEFS = _LARGEFILE,_USE_STD_STAT,_POSIX_EXIT,ZSTD_DISABLE_ASM,"ZSTD_LEGACY_SUPPORT=5","XXH_NAMESPACE=ZSTD_"
+ZSTD_DEFS = _LARGEFILE,_USE_STD_STAT,_POSIX_EXIT,ZSTD_DISABLE_ASM,"DYNAMIC_BMI2=0","ZSTD_LEGACY_SUPPORT=5","XXH_NAMESPACE=ZSTD_"
 LIB_CFLAGS = $(CC_QUAL)/INCLUDE_DIRECTORY=("./lib","./lib/common","./lib/legacy")-
 	/DEFINE=($(ZSTD_DEFS))
 CFLAGS = $(CC_QUAL)/INCLUDE_DIRECTORY=("./programs","./lib","./lib/common","./vms")-

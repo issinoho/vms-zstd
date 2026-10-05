@@ -1,0 +1,21 @@
+Subject: lib/common/cpu.h: on OpenVMS, no cpuid through GNU inline assembler
+
+ZSTD_cpuid() reads the CPU's features with GNU inline assembler whenever
+__x86_64__ is defined.  VSI C on x86-64 defines __x86_64__ but has no GNU
+asm syntax (%CC-E-CLOSEPAREN), so the objects including cpu.h were not
+built.  On VMS report no optional CPU features, as on other targets
+without cpuid; vms/descrip.mms also sets DYNAMIC_BMI2=0, so the portable
+code paths are used.
+
+--- a/lib/common/cpu.h	2026-10-05 05:04:30.183592040 -0700
++++ b/lib/common/cpu.h	2026-10-05 05:04:30.241193608 -0700
+@@ -118,7 +118,8 @@
+           : "a"(7), "c"(0)
+           : "edx");
+     }
+-#elif defined(__x86_64__) || defined(_M_X64) || defined(__i386__)
++#elif (defined(__x86_64__) || defined(_M_X64) || defined(__i386__)) \
++    && !defined(__VMS)  /* VSI C has no GNU inline assembler: no cpuid */
+     U32 n;
+     __asm__("cpuid" : "=a"(n) : "a"(0) : "ebx", "ecx", "edx");
+     if (n >= 1) {
