@@ -1,0 +1,41 @@
+Subject: programs/platform.h, zstdcli.c: on OpenVMS, exit through vms_exit()
+
+With _POSIX_EXIT the VSI C RTL gives every exit code a success severity,
+so to DCL a failed zstd run looked successful and ON ERROR never fired.
+Route exit() (EXM_THROW and the other calls) to vms_exit()
+(vms/vms_exit.c), which gives DCL an error severity and keeps the POSIX
+status under a GNV shell, and end main with exit(): a return from main
+bypasses it.
+
+--- a/programs/platform.h	2025-02-19 00:04:24.000000000 +0000
++++ b/programs/platform.h	2026-10-05 12:49:30.987130149 +0100
+@@ -214,4 +214,16 @@
+ #  endif
+ #endif
+ 
++#if defined(__VMS) && !defined(VMS_EXIT_IMPLEMENTATION)
++/* OpenVMS: with _POSIX_EXIT the C RTL gives every exit code a success
++   severity, so to DCL a failed run looked successful.  vms_exit()
++   (vms/vms_exit.c) gives DCL an error severity, and keeps the POSIX status
++   under a GNV shell.  <stdlib.h> first: its own exit macro must not
++   replace this one.  */
++#  include <stdlib.h>
++#  undef exit
++#  define exit vms_exit
++extern void vms_exit(int status);
++#endif
++
+ #endif /* PLATFORM_H_MODULE */
+--- a/programs/zstdcli.c	2025-02-19 00:04:24.000000000 +0000
++++ b/programs/zstdcli.c	2026-10-05 12:49:30.987628769 +0100
+@@ -1654,5 +1654,10 @@
+     TRACE_finish();
+ #endif
+ 
++#ifdef __VMS
++    /* exit (vms_exit, see platform.h) gives DCL an error severity for a
++       failed run; a return from main would not.  */
++    exit(operationResult);
++#endif
+     return operationResult;
+ }

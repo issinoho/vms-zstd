@@ -1,0 +1,71 @@
+Subject: programs/fileio.c, util.c: on OpenVMS, compress a text file's lines, not its records
+
+A VMS text file has variable-length (or VFC) records.  zstd opens its
+input in binary mode, and then the C RTL returns the records without their
+line breaks: a compressed text file decompressed to one long line.  On VMS
+read a file with variable-length or VFC records as text, so the compressed
+data has LF-terminated lines, as a Unix text file does; read any other
+file (stream, fixed-length records, that is binary data) as binary.  (As
+vms-bzip2 does.)
+
+The size of such a file on disk includes its record lengths, not the line
+breaks, so zstd promised the wrong size in the frame header and stopped
+("Src size is incorrect"): UTIL_getFileSizeStat() reports it as unknown.
+
+--- a/programs/fileio.c	2026-10-05 12:49:31.004765285 +0100
++++ b/programs/fileio.c	2026-10-05 12:49:44.775612575 +0100
+@@ -42,6 +42,9 @@
+ #endif
+ 
+ #include "fileio.h"
++#if defined(__VMS)
++#  include <fabdef.h>   /* FAB$C_VAR, FAB$C_VFC */
++#endif
+ #include "fileio_asyncio.h"
+ #include "fileio_common.h"
+ 
+@@ -566,7 +569,18 @@
+         return NULL;
+     }
+ 
++#if defined(__VMS)
++    /* A VMS text file has variable-length (or VFC) records; read in binary
++     * mode, the C RTL gives the records without their line breaks.  Read
++     * such a file as text, so the compressed data has LF-terminated lines
++     * (as on Unix); any other file (stream, fixed-length records: binary
++     * data) as binary. */
++    {   const char* const mode = (statbuf->st_fab_rfm == FAB$C_VAR
++                                  || statbuf->st_fab_rfm == FAB$C_VFC) ? "r" : "rb";
++        FILE* const f = fopen(srcFileName, mode);
++#else
+     {   FILE* const f = fopen(srcFileName, "rb");
++#endif
+         if (f == NULL)
+             DISPLAYLEVEL(1, "zstd: %s: %s \n", srcFileName, strerror(errno));
+         return f;
+--- a/programs/util.c	2026-10-05 04:59:47.983071112 -0700
++++ b/programs/util.c	2026-10-05 04:59:48.083758398 -0700
+@@ -17,6 +17,9 @@
+ #include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC, nanosleep */
+ #include <errno.h>
+ #include <assert.h>
++#if defined(__VMS)
++#  include <fabdef.h>   /* FAB$C_VAR, FAB$C_VFC */
++#endif
+ 
+ #if defined(__FreeBSD__)
+ #include <sys/param.h> /* __FreeBSD_version */
+@@ -536,6 +539,13 @@
+ #else
+     if (!S_ISREG(statbuf->st_mode)) return UTIL_FILESIZE_UNKNOWN;
+ #endif
++#if defined(__VMS)
++    /* A text file (variable-length or VFC records) is read as text
++     * (fileio.c): its size on disk includes the record lengths, not the
++     * line breaks, so the size of what is read is not known in advance. */
++    if (statbuf->st_fab_rfm == FAB$C_VAR || statbuf->st_fab_rfm == FAB$C_VFC)
++        return UTIL_FILESIZE_UNKNOWN;
++#endif
+     return (U64)statbuf->st_size;
+ }
+ 
