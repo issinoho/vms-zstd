@@ -1,0 +1,35 @@
+--
+-- PCSI product description for Zstandard (zstd) on OpenVMS.
+-- Template: tools/prepare.sh substitutes @PRODUCER@, @BASE@ and @PCSIVERSION@.
+--
+product @PRODUCER@ @BASE@ ZSTD @PCSIVERSION@ full ;
+
+    information RELEASE_NOTES phase after ;
+
+    directory [ZSTD] ;
+    directory [ZSTD.BIN] ;
+    directory [ZSTD.DOC] ;
+    directory [ZSTD.INCLUDE] ;
+    directory [ZSTD.LIB] ;
+
+    file [ZSTD.BIN]ZSTD.EXE ;
+    file [ZSTD.LIB]LIBZSTD.OLB ;
+@INCLUDES@
+    file [SYS$STARTUP]ZSTD$STARTUP.COM ;
+    file [ZSTD]ZSTD$SETUP.COM ;
+    file [ZSTD.DOC]README.VMS ;
+    file [ZSTD.DOC]LICENSE. ;
+    file [ZSTD.DOC]COPYING. ;
+    file [ZSTD.DOC]CHANGELOG. ;
+    file [ZSTD.DOC]ZSTD.1 ;
+    file [ZSTD.DOC]ZSTD.TXT ;
+
+    -- Define ZSTD$ROOT now and print the post-installation tasks (PCSI shows
+    -- only the title of an information message unless /HELP is given).
+    execute postinstall "@PCSI$DESTINATION:[SYS$STARTUP]ZSTD$STARTUP.COM INSTALL" interactive ;
+    -- On removal, deassign ZSTD$ROOT.
+    execute install "CONTINUE" remove "@PCSI$DESTINATION:[SYS$STARTUP]ZSTD$STARTUP.COM REMOVE" ;
+
+    information POST_INSTALL phase after ;
+
+end product ;

@@ -1,0 +1,72 @@
+Zstandard (zstd) for OpenVMS
+============================
+
+This is Zstandard (zstd) @VERSION@ built natively for OpenVMS @ARCH@, from the
+unmodified release plus the patches in the vms-zstd project:
+
+    https://github.com/issinoho/vms-zstd
+
+Kit version: @KITVERSION@.  Zstandard is free software, dual-licensed under BSD and GPLv2;
+see LICENSE and COPYING.  The manual is ZSTD.TXT; ZSTD.1 is the manual page.
+
+What is installed
+-----------------
+    ZSTD$ROOT:[BIN]ZSTD.EXE
+    ZSTD$ROOT:[LIB]LIBZSTD.OLB      the library (libzstd)
+    ZSTD$ROOT:[INCLUDE]ZSTD.H, ZSTD_ERRORS.H, ZDICT.H
+    ZSTD$ROOT:[DOC]                 this file, LICENSE, COPYING, CHANGELOG
+    ZSTD$ROOT:[000000]ZSTD$SETUP.COM   defines the commands
+    SYS$STARTUP:ZSTD$STARTUP.COM      defines ZSTD$ROOT
+
+Setting up
+----------
+The kit installs ZSTD$STARTUP.COM into SYS$STARTUP and runs it once.  To
+define ZSTD$ROOT at every boot, the system manager adds this line to
+SYS$MANAGER:SYSTARTUP_VMS.COM:
+
+    $ @SYS$STARTUP:ZSTD$STARTUP.COM
+
+Each user (or SYLOGIN.COM, for everyone) then defines the commands:
+
+    $ @ZSTD$ROOT:[000000]ZSTD$SETUP.COM
+
+Using it
+--------
+    $ zstd file.txt                 ! file.txt.zst, keeping file.txt
+    $ unzstd file.txt.zst           ! zstd -d
+    $ zstdcat file.txt.zst          ! to SYS$OUTPUT
+    $ zstd "-19" "--rm" file.dat    ! higher level, remove the original
+
+zstd also decodes the old v0.5-v0.7 formats.  A name like file.txt.zst
+needs an ODS-5 disk.  This build is single-threaded (no -T).
+
+Text and binary files
+---------------------
+A VMS text file (variable-length or VFC records) is compressed as text:
+its records become lines ending in LF, as on Unix, so the compressed file
+can be unpacked anywhere.  Decompressing gives a Stream_LF file with the
+same lines.  Any other file (stream, fixed-length records: executables,
+kits, binary data) is compressed byte for byte.
+
+Using the library
+-----------------
+Compile with /INCLUDE=ZSTD$ROOT:[INCLUDE] and link with
+ZSTD$ROOT:[LIB]LIBZSTD.OLB/LIBRARY.  The library is compiled /NAMES=(AS_IS,SHORTENED); its
+header declares the API so, so a program compiled with any /NAMES links
+with it.
+
+Exit status
+-----------
+Under DCL a failed run exits with an error-severity status, so ON ERROR and
+IF .NOT. $STATUS work; the exit code N is ($STATUS .AND. %X7F8) / 8.  Under
+a GNV shell, $? is the exit code as on Unix.
+
+Upper-case options and batch jobs
+---------------------------------
+Under the TRADITIONAL DCL parse style DCL upper-cases the unquoted parts of
+a command and the C run-time library passes them to the program in lower
+case.  Batch jobs use TRADITIONAL even when interactive logins are set to
+EXTENDED.  Quote options with capitals, use the long forms, or start the
+procedure with
+
+    $ SET PROCESS/PARSE_STYLE=EXTENDED

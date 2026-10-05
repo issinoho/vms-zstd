@@ -46,8 +46,8 @@ step "$(grep -c '^\$(LOBJ)' "$stage/vms/sources.mms") library objects, $(grep -c
 if [ -d "$stage/vms/kit" ]; then
 step "PCSI kit inputs"
 : "${KIT_PRODUCER:=ISSINOHO}"
-# Three-part versions (1.0.8): the third part is the PCSI update and our VMS
-# patch level the ECO, so 1.0.8-vms1 is V1.0-8E1.
+# Three-part versions: the third part is the PCSI update and our VMS patch
+# level the ECO, so $UPSTREAM_VERSION-vms$VMS_PATCH_LEVEL is V<major>.<minor>-<update>E<level>.
 IFS=. read -r major minor update _ <<< "$UPSTREAM_VERSION"
 pcsiversion="V$major.$minor-${update:-0}E$VMS_PATCH_LEVEL"
 kitversion="$UPSTREAM_VERSION-vms$VMS_PATCH_LEVEL"
@@ -57,8 +57,11 @@ subst() {
         -e "s/@PCSIVERSION@/$pcsiversion/g" -e "s/@VERSION@/$UPSTREAM_VERSION/g" \
         -e "s/@KITVERSION@/$kitversion/g" -e "s/@ARCH@/$2/g"
 }
+# The headers the kit installs, as PCSI file lines.
+includes=$( printf "%s\n" ZSTD.H ZSTD_ERRORS.H ZDICT.H | sed 's|.*|    file [ZSTD.INCLUDE]&;|; s|;$| ;|')
 for base in I64VMS X86VMS; do
-    subst $base "" < "$kit/zstd.pcsi\$desc_template" > "$kit/ZSTD-$base.PCSI\$DESC"
+    subst $base "" < "$kit/zstd.pcsi\$desc_template" |
+        awk -v d="$includes" '{ if ($0 == "@INCLUDES@") print d; else print }' > "$kit/ZSTD-$base.PCSI\$DESC"
     subst $base "" < "$kit/zstd.pcsi\$text_template" > "$kit/ZSTD-$base.PCSI\$TEXT"
 done
 rm -f "$kit/zstd.pcsi\$desc_template" "$kit/zstd.pcsi\$text_template"
@@ -67,10 +70,11 @@ mv "$kit/zstd\$setup.com" "$kit/ZSTD\$SETUP.COM"
 subst "" "IA64 and x86-64" < "$kit/readme.vms" > "$kit/README.VMS"; rm -f "$kit/readme.vms"
 mkdir -p "$kit/doc"
 cp "$stage/LICENSE" "$kit/doc/LICENSE."
-cp "$stage/CHANGES" "$kit/doc/CHANGES."
-cp "$stage/zstd.1" "$kit/doc/ZSTD.1"
-cp "$stage/zstd.txt" "$kit/doc/ZSTD.TXT"
-cp "$stage/manual.html" "$kit/doc/MANUAL.HTML"
+cp "$stage/COPYING" "$kit/doc/COPYING."
+cp "$stage/CHANGELOG" "$kit/doc/CHANGELOG."
+cp "$stage/programs/zstd.1" "$kit/doc/ZSTD.1"
+# The manual page's source is markdown, readable as it is.
+cp "$stage/programs/zstd.1.md" "$kit/doc/ZSTD.TXT"
 printf 'KIT_PRODUCER=%s\nPCSI_VERSION=%s\nKIT_VERSION=%s\n' "$KIT_PRODUCER" "$pcsiversion" \
     "$kitversion" > "$kit/kit.env"
 fi
