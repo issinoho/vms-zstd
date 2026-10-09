@@ -4,7 +4,9 @@
 
 # Zstandard for OpenVMS
 
+[![Release](https://img.shields.io/github/v/release/issinoho/vms-zstd?label=release)](https://github.com/issinoho/vms-zstd/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/issinoho/vms-zstd/total?label=downloads)](https://github.com/issinoho/vms-zstd/releases)
+![OpenVMS](https://img.shields.io/badge/OpenVMS-IA64%20%7C%20x86--64-blue)
 
 [Zstandard](https://facebook.github.io/zstd/) (**1.5.7**), the zstd compressor and the libzstd
 library, built natively for OpenVMS on **IA64** and **x86-64**, following its own releases. It
