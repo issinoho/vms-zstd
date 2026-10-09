@@ -4,6 +4,8 @@
 
 # Zstandard for OpenVMS
 
+[![Downloads](https://img.shields.io/github/downloads/issinoho/vms-zstd/total?label=downloads)](https://github.com/issinoho/vms-zstd/releases)
+
 [Zstandard](https://facebook.github.io/zstd/) (**1.5.7**), the zstd compressor and the libzstd
 library, built natively for OpenVMS on **IA64** and **x86-64**, following its own releases. It
 belongs to the same family as [GNU grep](https://github.com/issinoho/vms-grep),
