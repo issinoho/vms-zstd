@@ -59,7 +59,7 @@ subst() {
 }
 # The headers the kit installs, as PCSI file lines.
 includes=$( printf "%s\n" ZSTD.H ZSTD_ERRORS.H ZDICT.H | sed 's|.*|    file [ZSTD.INCLUDE]&;|; s|;$| ;|')
-for base in I64VMS X86VMS; do
+for base in I64VMS X86VMS AXPVMS; do
     subst $base "" < "$kit/zstd.pcsi\$desc_template" |
         awk -v d="$includes" '{ if ($0 == "@INCLUDES@") print d; else print }' > "$kit/ZSTD-$base.PCSI\$DESC"
     subst $base "" < "$kit/zstd.pcsi\$text_template" > "$kit/ZSTD-$base.PCSI\$TEXT"
