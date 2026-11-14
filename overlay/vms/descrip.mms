@@ -1,4 +1,4 @@
-! DESCRIP.MMS - build Zstandard (zstd) for OpenVMS (IA64, x86-64)
+! DESCRIP.MMS - build Zstandard (zstd) for OpenVMS (IA64, x86-64, Alpha)
 !
 ! Run via [.VMS]BUILD.COM, which passes ARCH and creates the output
 ! directories.  zstd has no configure; [.VMS]SOURCES.MMS (tools/

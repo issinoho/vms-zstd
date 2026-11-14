@@ -7,7 +7,7 @@ $!
 $! Includes upstream's golden files (tests/golden-*): golden-decompression
 $! frames decompress, golden-decompression-errors frames are errors, and the
 $! golden-compression inputs round-trip.  Files are compared byte by byte
-$! with VSI Perl.
+$! with VSI Perl, or where there is none (OpenVMS Alpha) with SAME.C.
 $!
 $ set noon
 $ saved_default = f$environment("DEFAULT")
@@ -33,18 +33,45 @@ $ zstd = "$" + bin + "ZSTD.EXE"
 $ pass = 0
 $ fail = 0
 $ perl_setup = f$search("SYS$COMMON:[PERL-5_*]PERL_SETUP.COM")
-$ if perl_setup .eqs. ""
-$ then
-$   write sys$output "SMOKE: VSI Perl not found (SYS$COMMON:[PERL-5_*]PERL_SETUP.COM)"
-$   exit 44
-$ endif
-$ @'perl_setup'
+$ if perl_setup .nes. "" then @'perl_setup'
 $ if f$search("SMOKE.DIR") .eqs. "" then create/directory [.SMOKE]
 $ set default [.SMOKE]
 $ set process/parse_style=extended
-$ create same.pl
+$! SAME a b [T]: success if the two files hold the same bytes.  With T the files
+$! are read as text files (a variable-length record file comes back with its
+$! line ends), otherwise as raw bytes.
+$ if perl_setup .nes. ""
+$ then
+$   create same.pl
 open my $a, '<:raw', $ARGV[0] or exit 2; open my $b, '<:raw', $ARGV[1] or exit 2;
 local $/; my $x = <$a>; my $y = <$b>; exit($x eq $y ? 0 : 1);
+$!  PERL_SETUP defines perl as a foreign command symbol; DCL expands only the
+$!  first symbol of a command, so put its value, not its name, in SAME.
+$   same = perl + " same.pl"
+$ else
+$   write sys$output "SMOKE: no VSI Perl; comparing files with SAME.C"
+$   create same.c
+#include <stdio.h>
+#include <stdlib.h>
+int main(int argc, char **argv)
+{
+    FILE *a, *b;
+    int c, d;
+    if (argc < 3) exit(44);
+    a = fopen(argv[1], argc > 3 ? "r" : "rb");
+    b = fopen(argv[2], argc > 3 ? "r" : "rb");
+    if (a == NULL || b == NULL) exit(44);
+    do {
+        c = getc(a);
+        d = getc(b);
+        if (c != d) exit(44);
+    } while (c != EOF);
+    return 0;
+}
+$   cc/nolist/float=ieee_float/object=same.obj same.c
+$   link/nomap/executable=same.exe same.obj
+$   same = "$" + f$environment("DEFAULT") + "SAME.EXE"
+$ endif
 $!
 $! 1. version
 $ define/user sys$output out.txt
@@ -58,7 +85,7 @@ $! 2. a text file (variable-length records) round trip: its lines survive
 $!    (patch 0003)
 $ create text.txt
 The quick brown fox jumps over the lazy dog.
-OpenVMS, IA64 and x86-64.
+OpenVMS, IA64, x86-64 and Alpha.
 $ copy/nolog text.txt orig.txt
 $ zstd "-q" text.txt
 $ sev = $severity
@@ -75,7 +102,7 @@ $   zstd "-q" "-d" text.txt.zst
 $   sev = $severity
 $   if sev .eq. 1
 $   then
-$     perl same.pl text.txt orig.txt
+$     same text.txt orig.txt t
 $     if $status .ne. 1 then sev = 2
 $   endif
 $ endif
@@ -94,7 +121,7 @@ $   zstd "-q" "-d" "--rm" bin.dat.zst
 $   sev = $severity
 $   if sev .eq. 1
 $   then
-$     perl same.pl bin.dat binorig.dat
+$     same bin.dat binorig.dat
 $     if $status .ne. 1 then sev = 2
 $   endif
 $ endif
@@ -170,7 +197,7 @@ $   zstd "-q" "-f" "-d" "-o" gc.out gc.zst
 $   s = $severity
 $   if s .eq. 1
 $   then
-$     perl same.pl gc.out gc.dat
+$     same gc.out gc.dat
 $     if $status .ne. 1 then s = 2
 $   endif
 $ endif

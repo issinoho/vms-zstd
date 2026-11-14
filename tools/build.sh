@@ -11,7 +11,8 @@ keep=${3:-}
 variant=${4:-}
 . "$top/upstream.conf"
 remote=$(echo "$UPSTREAM_NAME-$UPSTREAM_VERSION" | tr . _ | tr a-z A-Z)
-read -r _ _ _ _ _ WORKDIR _ < <(awk -v n="$node" '$1==n' "$top/tools/nodes.conf")
+read -r _ ARCH _ _ _ WORKDIR _ < <(awk -v n="$node" '$1==n' "$top/tools/nodes.conf")
+mode=run; [ "$ARCH" = ALPHA ] && mode=batch   # interactive ssh output is unreliable on the Alpha (and slow)
 
 "$top/tools/push.sh" "$node"
 mkdir -p "$top/out"
@@ -22,7 +23,7 @@ cat > "$job" <<DCL
 \$ purge/nolog ${WORKDIR%]}.$remote...]*.*
 \$ @${WORKDIR%]}.$remote.VMS]BUILD.COM "$target" "$keep" "$variant"
 DCL
-VMS_TIMEOUT=${VMS_BUILD_TIMEOUT:-5400} "$top/tools/vms.sh" "$node" run "$job" | tee "$top/out/build-$node$variant.log"
+VMS_TIMEOUT=${VMS_BUILD_TIMEOUT:-5400} "$top/tools/vms.sh" "$node" $mode "$job" | tee "$top/out/build-$node$variant.log"
 grep -q 'BUILD: done' "$top/out/build-$node$variant.log"
 # A link with undefined symbols still writes the image, which then fails at
 # run time (%SYSTEM-F-CALLUNDEFSYM); and MMS carries on past a failed

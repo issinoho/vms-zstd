@@ -14,8 +14,10 @@ $ proc = f$environment("PROCEDURE")
 $ vmsdir = f$parse(proc,,,"DEVICE") + f$parse(proc,,,"DIRECTORY")
 $ set default 'vmsdir'
 $ set default [-]
+$! F$GETSYI returns "Alpha", "IA64" or "x86_64": upper-case it, and compare with
+$! .EQS./.NES. (.EQ./.NE. would compare the names as integers).
 $ arch = f$edit(f$getsyi("ARCH_NAME"), "UPCASE")
-$ if arch .eqs. "IA64" .or. arch .eqs. "X86_64" then goto arch_ok
+$ if arch .eqs. "IA64" .or. arch .eqs. "X86_64" .or. arch .eqs. "ALPHA" then goto arch_ok
 $ write sys$error "BUILD: unsupported architecture ''arch'"
 $ goto done
 $arch_ok:

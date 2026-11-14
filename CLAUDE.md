@@ -48,7 +48,11 @@ covers the rules and the pitfalls.
 - **Exit status:** `exit()` goes through `vms_exit()` (`vms/vms_exit.c`); a `return` from
   `main` bypasses it, so `main` ends with `exit()` on VMS.
 - **Smoke tests** compare files byte for byte with VSI Perl
-  (`SYS$COMMON:[PERL-5_*]PERL_SETUP.COM`); DIFFERENCES compares records.
+  (`SYS$COMMON:[PERL-5_*]PERL_SETUP.COM`), or with a small C program (`SAME.C`) where there is no Perl
+  (Alpha); DIFFERENCES compares records.
+- **Alpha:** `build.sh`/`test.sh`/`kit.sh`/`installcheck.sh` use `vms.sh batch` (interactive ssh output is
+  unreliable there; a batch job starts in the login directory, so set default). The AXPVMS kit has its own
+  README (`README_AXPVMS.VMS`). Patch level 2 is the Alpha kit; the other kits stay on 1.
 
 ## Commands
 

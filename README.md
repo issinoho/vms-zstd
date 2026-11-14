@@ -6,11 +6,11 @@
 
 [![Release](https://img.shields.io/github/v/release/issinoho/vms-zstd?label=release)](https://github.com/issinoho/vms-zstd/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/issinoho/vms-zstd/total?label=downloads)](https://github.com/issinoho/vms-zstd/releases)
-![OpenVMS](https://img.shields.io/badge/OpenVMS-IA64%20%7C%20x86--64-blue)
+![OpenVMS](https://img.shields.io/badge/OpenVMS-IA64%20%7C%20x86--64%20%7C%20Alpha-blue)
 [![License](https://img.shields.io/badge/license-BSD--3--Clause%20OR%20GPL--2.0-blue)](COPYING)
 
 [Zstandard](https://facebook.github.io/zstd/) (**1.5.7**), the zstd compressor and the libzstd
-library, built natively for OpenVMS on **IA64** and **x86-64**, following its own releases. It
+library, built natively for OpenVMS on **IA64**, **x86-64** and **Alpha**, following its own releases. It
 belongs to the same family as [GNU grep](https://github.com/issinoho/vms-grep),
 [GNU sed](https://github.com/issinoho/vms-sed), [GNU awk](https://github.com/issinoho/vms-awk),
 [GNU make](https://github.com/issinoho/vms-make),
@@ -37,6 +37,11 @@ them.
 | Smoke test: upstream's golden files (golden-decompression frames decompress, golden-decompression-errors are errors, golden-compression inputs round-trip at -1, -3 and -19), text and binary round trips, `zstd -l`, a `/NAMES=UPPERCASE` program linking with `LIBZSTD.OLB`, error statuses | 10/10 | 10/10 |
 | Kit install, smoke test on the installed kit, remove | clean | clean |
 | PCSI kit (`ZSTD`, `V1.5-7E1`) | `ISSINOHO-I64VMS-ZSTD-V0105-7E1-1.PCSI` | `ISSINOHO-X86VMS-ZSTD-V0105-7E1-1.PCSI` |
+
+**Alpha (v1.5.7-vms2, a dedicated Alpha release; IA64 and x86-64 stay on vms1):** built on OpenVMS
+Alpha V8.4-2L2 with VSI C V7.4-002 (no Perl there: the smoke test compares files with a small C
+program, `SAME.C`); builds with no warnings (informational messages only), smoke test 10/10, kit
+`ISSINOHO-AXPVMS-ZSTD-V0105-7E2-1.PCSI` (`ZSTD` `V1.5-7E2`).
 
 ## Installing the kit
 
@@ -104,7 +109,7 @@ tools/kit.sh ia64           # PCSI kit -> out/kits/
 
 1. Link this library into the other ports where they can use it (Wget, curl).
 2. Offer the patches upstream.
-3. A port to OpenVMS **Alpha**.
+3. ~~A port to OpenVMS **Alpha**.~~ Done: see Status (Alpha kit, patch level 2).
 
 The family of ports, all for IA64 and x86-64 (MariaDB: x86-64 only), each following its upstream releases:
 
