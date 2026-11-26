@@ -33,7 +33,7 @@
 <rect x="50" y="81" width="704" height="275" fill="url(#glow)"/>
 <g font-family="'DejaVu Sans Mono','Liberation Mono','Menlo','Consolas','Courier New',monospace" font-size="17" filter="url(#phosphor)">
 <text x="66" y="111" xml:space="preserve"><tspan fill="#3dff7a">$ </tspan><tspan fill="#3dff7a" font-weight="bold">zstd --version</tspan></text>
-<text x="66" y="136" xml:space="preserve"><tspan fill="#3dff7a">*** Zstandard CLI v1.5.7 ***</tspan></text>
+<text x="66" y="136" xml:space="preserve"><tspan fill="#3dff7a">*** Zstandard CLI v1.6.0 ***</tspan></text>
 <text x="66" y="161" xml:space="preserve"><tspan fill="#3dff7a">$ </tspan><tspan fill="#3dff7a" font-weight="bold">zstd "-19" report.txt</tspan></text>
 <text x="66" y="186" xml:space="preserve"><tspan fill="#3dff7a">report.txt : 27.10% ( 11.0 KiB => 3.0 KiB)</tspan></text>
 <text x="66" y="211" xml:space="preserve"><tspan fill="#3dff7a">$ </tspan><tspan fill="#3dff7a" font-weight="bold">zstdcat report.txt.zst</tspan></text>
@@ -64,5 +64,5 @@
 <text x="1084.0" y="274" text-anchor="middle" font-family="'DejaVu Sans','Liberation Sans','Helvetica Neue',Arial,sans-serif" font-size="17" font-weight="bold" fill="#3b382f">Alpha</text>
 <text x="1084.0" y="318" text-anchor="middle" font-family="'DejaVu Sans','Liberation Sans','Helvetica Neue',Arial,sans-serif" font-size="13" font-style="italic" fill="#9fb3c4">soon</text>
 </g>
-<text x="812" y="352" font-family="'DejaVu Sans','Liberation Sans','Helvetica Neue',Arial,sans-serif" font-size="16" fill="#8fa6b8">zstd 1.5.7  ·  libzstd  ·  PCSI kits</text>
+<text x="812" y="352" font-family="'DejaVu Sans','Liberation Sans','Helvetica Neue',Arial,sans-serif" font-size="16" fill="#8fa6b8">zstd 1.6.0  ·  libzstd  ·  PCSI kits</text>
 </svg>

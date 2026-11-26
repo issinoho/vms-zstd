@@ -9,7 +9,7 @@
 ![OpenVMS](https://img.shields.io/badge/OpenVMS-IA64%20%7C%20x86--64%20%7C%20Alpha-blue)
 [![License](https://img.shields.io/badge/license-BSD--3--Clause%20OR%20GPL--2.0-blue)](COPYING)
 
-[Zstandard](https://facebook.github.io/zstd/) (**1.5.7**), the zstd compressor and the libzstd
+[Zstandard](https://facebook.github.io/zstd/) (**1.6.0**), the zstd compressor and the libzstd
 library, built natively for OpenVMS on **IA64**, **x86-64** and **Alpha**, following its own releases. It
 belongs to the same family as [GNU grep](https://github.com/issinoho/vms-grep),
 [GNU sed](https://github.com/issinoho/vms-sed), [GNU awk](https://github.com/issinoho/vms-awk),
@@ -29,19 +29,23 @@ them.
 
 ## Status
 
-**Released: [v1.5.7-vms1](https://github.com/issinoho/vms-zstd/releases/tag/v1.5.7-vms1).**
+**Released: [v1.6.0-vms1](https://github.com/issinoho/vms-zstd/releases/tag/v1.6.0-vms1)** for x86-64
+and Alpha. IA64 stays on [v1.5.7-vms1](https://github.com/issinoho/vms-zstd/releases/tag/v1.5.7-vms1)
+for now (its build node is unavailable); a 1.6.0 IA64 kit will follow.
 
-| | IA64 (OpenVMS V8.4-2L3, VSI C 7.4) | x86-64 (OpenVMS E9.2-4, VSI C 7.7) |
-|---|---|---|
-| Builds | yes | yes |
-| Smoke test: upstream's golden files (golden-decompression frames decompress, golden-decompression-errors are errors, golden-compression inputs round-trip at -1, -3 and -19), text and binary round trips, `zstd -l`, a `/NAMES=UPPERCASE` program linking with `LIBZSTD.OLB`, error statuses | 10/10 | 10/10 |
-| Kit install, smoke test on the installed kit, remove | clean | clean |
-| PCSI kit (`ZSTD`, `V1.5-7E1`) | `ISSINOHO-I64VMS-ZSTD-V0105-7E1-1.PCSI` | `ISSINOHO-X86VMS-ZSTD-V0105-7E1-1.PCSI` |
+| | IA64 (OpenVMS V8.4-2L3, VSI C 7.4) | x86-64 (OpenVMS E9.2-4, VSI C 7.7) | Alpha (OpenVMS V8.4-2L2, VSI C 7.4) |
+|---|---|---|---|
+| zstd version of the newest kit | 1.5.7 (1.6.0 to follow) | **1.6.0** | **1.6.0** |
+| Builds (no warnings; informational messages only) | yes (1.5.7) | yes | yes |
+| Smoke test: upstream's golden files (golden-decompression frames decompress, golden-decompression-errors are errors, golden-compression inputs round-trip at -1, -3 and -19), text and binary round trips, `zstd -l`, a `/NAMES=UPPERCASE` program linking with `LIBZSTD.OLB`, error statuses | 10/10 (1.5.7) | 10/10 | 10/10 |
+| Kit install, smoke test on the installed kit, remove | clean (1.5.7) | clean | clean |
+| PCSI kit | [v1.5.7-vms1](https://github.com/issinoho/vms-zstd/releases/tag/v1.5.7-vms1): `ISSINOHO-I64VMS-ZSTD-V0105-7E1-1.PCSI` (`V1.5-7E1`) | [v1.6.0-vms1](https://github.com/issinoho/vms-zstd/releases/tag/v1.6.0-vms1): `ISSINOHO-X86VMS-ZSTD-V0106-0E1-1.PCSI` (`V1.6-0E1`) | [v1.6.0-vms1](https://github.com/issinoho/vms-zstd/releases/tag/v1.6.0-vms1): `ISSINOHO-AXPVMS-ZSTD-V0106-0E1-1.PCSI` (`V1.6-0E1`) |
 
-**Alpha (v1.5.7-vms2, a dedicated Alpha release; IA64 and x86-64 stay on vms1):** built on OpenVMS
-Alpha V8.4-2L2 with VSI C V7.4-002 (no Perl there: the smoke test compares files with a small C
-program, `SAME.C`); builds with no warnings (informational messages only), smoke test 10/10, kit
-`ISSINOHO-AXPVMS-ZSTD-V0105-7E2-1.PCSI` (`ZSTD` `V1.5-7E2`).
+Alpha has no Perl, so its smoke test compares files with a small C program, `SAME.C`.
+
+**Legacy formats:** zstd 1.6.0 disables support for the old pre-1.0 formats by default. This port
+keeps building with `ZSTD_LEGACY_SUPPORT=5`, as before, so `zstd -d` and libzstd still read
+frames from zstd v0.5 to v0.7.
 
 ## Installing the kit
 
@@ -51,7 +55,7 @@ release's `SHA256SUMS`. A kit downloaded through a non-VMS system loses its reco
 restore that first, then install it:
 
 ```
-$ SET FILE/ATTRIBUTE=(RFM:FIX,LRL:8192,MRS:8192,RAT:NONE) ISSINOHO-*-ZSTD-V0105-7E1-1.PCSI
+$ SET FILE/ATTRIBUTE=(RFM:FIX,LRL:8192,MRS:8192,RAT:NONE) ISSINOHO-*-ZSTD-V0106-0E1-1.PCSI
 $ PRODUCT INSTALL ZSTD /PRODUCER=ISSINOHO /SOURCE=dev:[dir]
 $ @ZSTD$ROOT:[000000]ZSTD$SETUP.COM
 $ zstd file.txt
@@ -87,7 +91,7 @@ to `SYS$MANAGER:SYSTARTUP_VMS.COM`). `PRODUCT REMOVE ZSTD` removes it.
 |---|---|
 | 0001 | `lib/zstd.h`, `zstd_errors.h`, `zdict.h`: the API under `#pragma names as_is, shortened`. |
 | 0002 | `programs/platform.h`, `zstdcli.c`: `exit()` through `vms_exit()`; `main` ends with `exit()`. |
-| 0003 | `programs/fileio.c`, `util.c`: read a text file (variable-length or VFC records) as text, with its size unknown (its size on disk counts record lengths). |
+| 0003 | `programs/fileio.c`, `util.c`: read a text file (variable-length or VFC records) as text, with its size unknown (its size on disk counts record lengths). Since 1.6.0 it also turns off opening files relative to their parent directory's descriptor (`UTIL_HAVE_OPENAT`), as the C RTL cannot `open()` a directory. |
 | 0004 | `lib/common/cpu.h`: no `cpuid` through GNU inline assembler on VMS (VSI C on x86-64 cannot compile it); built with `DYNAMIC_BMI2=0`. |
 
 ## How to build
@@ -109,7 +113,7 @@ tools/kit.sh ia64           # PCSI kit -> out/kits/
 
 1. Link this library into the other ports where they can use it (Wget, curl).
 2. Offer the patches upstream.
-3. ~~A port to OpenVMS **Alpha**.~~ Done: see Status (Alpha kit, patch level 2).
+3. ~~A port to OpenVMS **Alpha**.~~ Done: see Status (Alpha kit).
 
 ## The family
 

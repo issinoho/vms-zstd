@@ -52,7 +52,7 @@ covers the rules and the pitfalls.
   (Alpha); DIFFERENCES compares records.
 - **Alpha:** `build.sh`/`test.sh`/`kit.sh`/`installcheck.sh` use `vms.sh batch` (interactive ssh output is
   unreliable there; a batch job starts in the login directory, so set default). The AXPVMS kit has its own
-  README (`README_AXPVMS.VMS`). Patch level 2 is the Alpha kit; the other kits stay on 1.
+  README (`README_AXPVMS.VMS`). Since 1.6.0 all architectures share one patch level.
 
 ## Commands
 
