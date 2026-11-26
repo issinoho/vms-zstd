@@ -12,8 +12,14 @@ The size of such a file on disk includes its record lengths, not the line
 breaks, so zstd promised the wrong size in the frame header and stopped
 ("Src size is incorrect"): UTIL_getFileSizeStat() reports it as unknown.
 
---- a/programs/fileio.c	2026-10-05 12:49:31.004765285 +0100
-+++ b/programs/fileio.c	2026-10-05 12:49:44.775612575 +0100
+zstd 1.6.0 opens files relative to a descriptor of their parent directory
+when the platform has openat() (UTIL_HAVE_OPENAT).  The VMS C RTL cannot
+open() a directory, so UTIL_HAVE_OPENAT is 0 on VMS and files are opened
+by name; the text-or-binary choice is made where FIO_openSrcFile() opens
+the source.
+
+--- a/programs/fileio.c	2026-11-23 22:40:52.000000000 +0000
++++ b/programs/fileio.c	2026-11-26 16:10:17.651287791 +0000
 @@ -42,6 +42,9 @@
  #endif
  
@@ -24,7 +30,7 @@ breaks, so zstd promised the wrong size in the frame header and stopped
  #include "fileio_asyncio.h"
  #include "fileio_common.h"
  
-@@ -566,7 +569,18 @@
+@@ -859,7 +862,20 @@
          return NULL;
      }
  
@@ -33,29 +39,36 @@ breaks, so zstd promised the wrong size in the frame header and stopped
 +     * mode, the C RTL gives the records without their line breaks.  Read
 +     * such a file as text, so the compressed data has LF-terminated lines
 +     * (as on Unix); any other file (stream, fixed-length records: binary
-+     * data) as binary. */
++     * data) as binary.  There is no parent-directory descriptor on VMS
++     * (UTIL_HAVE_OPENAT is 0), so the file is opened by name. */
++    (void)dir;
 +    {   const char* const mode = (statbuf->st_fab_rfm == FAB$C_VAR
 +                                  || statbuf->st_fab_rfm == FAB$C_VFC) ? "r" : "rb";
 +        FILE* const f = fopen(srcFileName, mode);
 +#else
-     {   FILE* const f = fopen(srcFileName, "rb");
+     {   FILE* const f = UTIL_fopenReadInDir(dir, srcFileName);
 +#endif
-         if (f == NULL)
+         if (f == NULL) {
              DISPLAYLEVEL(1, "zstd: %s: %s \n", srcFileName, strerror(errno));
-         return f;
---- a/programs/util.c	2026-10-05 04:59:47.983071112 -0700
-+++ b/programs/util.c	2026-10-05 04:59:48.083758398 -0700
-@@ -17,6 +17,9 @@
- #include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC, nanosleep */
+             return NULL;
+--- a/programs/util.c	2026-11-23 22:40:52.000000000 +0000
++++ b/programs/util.c	2026-11-26 16:10:17.650498185 +0000
+@@ -24,6 +24,14 @@
+ #include <fcntl.h>      /* open, O_RDONLY, AT_FDCWD */
  #include <errno.h>
  #include <assert.h>
 +#if defined(__VMS)
 +#  include <fabdef.h>   /* FAB$C_VAR, FAB$C_VFC */
++/* The C RTL cannot open() a directory, so files are opened by name, not
++ * relative to a descriptor of their parent directory. */
++#  ifndef UTIL_HAVE_OPENAT
++#    define UTIL_HAVE_OPENAT 0
++#  endif
 +#endif
  
- #if defined(__FreeBSD__)
- #include <sys/param.h> /* __FreeBSD_version */
-@@ -536,6 +539,13 @@
+ #ifndef UTIL_HAVE_OPENAT
+ #  if !defined(_WIN32) && (PLATFORM_POSIX_VERSION >= 200809L) && defined(st_mtime)
+@@ -801,6 +809,13 @@
  #else
      if (!S_ISREG(statbuf->st_mode)) return UTIL_FILESIZE_UNKNOWN;
  #endif
